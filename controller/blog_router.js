@@ -14,4 +14,16 @@ router.post('/api/blogs',(request,response) => {
     })
 })
 
+router.delete('/api/blogs/:id',async (request,response,next) => {
+    try{
+        const deletedBlog = await Blog.findByIdAndDelete(request.params.id)
+        if (deletedBlog){
+        return response.status(204).end()
+        }
+        return response.status(404).json({error: 'Blog id not found'})
+    } catch (error) {
+        next(error)
+    }
+})
+
 module.exports = router
