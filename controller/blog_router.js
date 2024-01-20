@@ -25,5 +25,21 @@ router.delete('/api/blogs/:id',async (request,response,next) => {
         next(error)
     }
 })
+router.put('/api/blogs/:id', async (request, response, next) => {
+    try{
+        const updated_id = request.params.id
+        const obj = await Blog.findOne({_id: updated_id})
+        console.log(obj)
+        if (!obj) {
+            return response.status(400).json({error: 'blog id not found'})
+        }
+        const newBlog= await Blog.findByIdAndUpdate(updated_id,
+            {$set: {
+                likes:obj.likes+1}
+            },
+            {new: true})
+        return response.status(200).json(newBlog)
+    } catch (error) { next(error) }
+})
 
 module.exports = router
