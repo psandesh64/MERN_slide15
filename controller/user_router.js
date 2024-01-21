@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt')
 
 router.get('/user',async (request, response, next) => {
     try{
-        const users = await User.find({})
+        const users = await User.find({}).populate('blogs',{title:1})
         response.json(users)
     } catch (error) {
         next(error)
@@ -14,7 +14,7 @@ router.get('/user',async (request, response, next) => {
 router.post('/user',async (request, response, next) => {
     try{
         const { username, name, password} = request.body
-        
+
         if (password.length < 3) {
             return response.status(400).json({ error: 'Password must be at least 3 characters long' });
         }
