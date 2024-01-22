@@ -6,6 +6,7 @@ const {requestLogger, errorHandler, unknownEndpoint} = require('./utils/middlewa
 const mongoose = require('mongoose')
 const blog_router = require('./controller/blog_router')
 const user_router = require('./controller/user_router')
+const login_router = require('./controller/login_router')
 
 mongoose.connect(MONGO_URL)
 .then(() => info('Connected to MongoDB'))
@@ -16,6 +17,7 @@ app.use(requestLogger)
 
 app.use('/',blog_router)
 app.use('/api',user_router)
+app.use('/api',login_router)
 
 app.use(errorHandler)
 app.use(unknownEndpoint)
