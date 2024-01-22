@@ -27,6 +27,7 @@ router.post('/api/blogs',async(request,response,next) => {
 
         const user = await User.findById(decodedToken.id)
         // const user = await User.findById(body.userId)
+        //for branch 9
         if (!user) { return response.status(404).json({ error: 'User not found' }) }
 
         const blog = new Blog({
