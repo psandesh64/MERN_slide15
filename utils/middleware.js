@@ -38,15 +38,10 @@ const tokenExtractor = async (request,response,next) => {
         return response.status(404).json({ error: 'User not found' }) 
     }
     request.user=user
-    } catch (error) { 
-        if (error.name === 'TokenExpiredError') {
-            return response.status(401).json({ error: 'Token expired' });
-        } else if (error.name === 'JsonWebTokenError'){
-            return response.status(401).json({ error: 'Token expired' });
-        }
-        else {next(error)}
-        }
     next()
+    } catch (error) { 
+         next(error)
+        }
 }
 const unknownEndpoint = (request,response) =>{
     response.status(404).json({error: 'unknown Endpoint'})

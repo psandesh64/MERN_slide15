@@ -15,7 +15,7 @@ mongoose.connect(MONGO_URL)
 app.use(express.json())
 app.use(requestLogger)
 
-app.use('/',blog_router)
+app.use('/api',blog_router)
 app.use('/api',user_router)
 app.use('/api',login_router)
 

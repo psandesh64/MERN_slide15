@@ -2,12 +2,12 @@ const router = require('express').Router()
 const Blog = require('../models/blog_model')
 const {tokenExtractor} = require('../utils/middleware')
 
-router.get('/api/blogs', (request,response) => {
+router.get('/blogs', (request,response) => {
     Blog.find({}).populate('user',{username:1})
     .then(results => response.json(results))
 })
 
-router.post('/api/blogs', tokenExtractor, async(request,response,next) => {
+router.post('/blogs', tokenExtractor, async(request,response,next) => {
     try {
         const postedBody = request.body;
         const user = request.user
@@ -26,9 +26,13 @@ router.post('/api/blogs', tokenExtractor, async(request,response,next) => {
     }
 })
 
-router.delete('/api/blogs/:id',async (request,response,next) => {
+router.delete('/blogs/:id',tokenExtractor,async (request,response,next) => {
     try{
-        const deletedBlog = await Blog.findByIdAndDelete(request.params.id)
+        const blog = await Blog.findById(request.params.id)
+        const toDelete = request.user._id.toString() === blog.user._id.toString()
+        ? request.params.id : undefined
+        console.log(blog,toDelete,request.user._id,blog.user._id)
+        const deletedBlog = await Blog.findByIdAndDelete(toDelete)
         if (deletedBlog){
         return response.status(204).end()
         }
@@ -37,7 +41,7 @@ router.delete('/api/blogs/:id',async (request,response,next) => {
         next(error)
     }
 })
-router.put('/api/blogs/:id', async (request, response, next) => {
+router.put('/blogs/:id', async (request, response, next) => {
     try{
         const updated_id = request.params.id
         const obj = await Blog.findOne({_id: updated_id})
