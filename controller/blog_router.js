@@ -25,8 +25,18 @@ router.get('/blogs', async (request, response) => {
 
 
 const multer= require('multer')
-const storage = multer.memoryStorage()  // Use memory storage for storing image data in Buffer
-const upload = multer({ storage: storage })
+const path = require('path')
+// Set up multer storage for saving files locally
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/') // Specify the directory where you want to save the files
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)) // Use current timestamp as filename
+    },
+})
+
+const upload = multer({ storage: storage });
 
 router.post('/blogs', tokenExtractor, upload.single('image'), async(request,response,next) => {
     try {
@@ -35,11 +45,14 @@ router.post('/blogs', tokenExtractor, upload.single('image'), async(request,resp
         console.log(user)
         // Handle file upload
         const image = request.file
-        console.log('jelly')
+
+        // Check if an image was provided in the request
+        const imageLocation = image ? `uploads/${image.filename}` : null
+
         const blog = new Blog({
             ...postedBody,
             user: user._id,
-            image: image ? image.buffer.toString('base64') : null,  // Store image data as base64
+            image: imageLocation,  
         });
 
         const savedBlog = await blog.save();

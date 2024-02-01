@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const path = require('path')
 const {MONGO_URL, PORT} = require('./utils/config')
 const logger = require('./utils/logger')
 const {requestLogger, errorHandler, unknownEndpoint} = require('./utils/middleware')
@@ -14,7 +15,7 @@ mongoose.connect(MONGO_URL)
 
 app.use(express.json())
 app.use(requestLogger)
-
+app.use(express.static('public'))
 app.use('/api',blog_router)
 app.use('/api',user_router)
 app.use('/api',login_router)
