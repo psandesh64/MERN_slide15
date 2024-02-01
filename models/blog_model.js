@@ -4,11 +4,17 @@ const blogSchema = new mongoose.Schema({
     title: String,
     author: String,
     url: String,
-    likes: Number,
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Users'
+    }],
     user: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'
+    },
+    image:{
+        type: String,   // or use Buffer for storing image data
     }
 })
 blogSchema.set('toJSON',{

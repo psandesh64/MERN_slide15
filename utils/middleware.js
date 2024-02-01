@@ -11,7 +11,7 @@ const requestLogger = (request, response, next) => {
 }
 
 const errorHandler = (error,request,response,next) => {
-    logger.error(error.name)
+    logger.error(error.message)
     return response.status(400).json({error: error.message})
     next(error)
 }

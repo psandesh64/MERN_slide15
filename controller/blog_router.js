@@ -2,18 +2,44 @@ const router = require('express').Router()
 const Blog = require('../models/blog_model')
 const {tokenExtractor} = require('../utils/middleware')
 
-router.get('/blogs', (request,response) => {
-    Blog.find({}).populate('user',{username:1})
-    .then(results => response.json(results))
+router.get('/blogs', async (request, response) => {
+    try {
+        const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
+
+        // Fetch image data for each blog entry
+        const blogsWithImages = await Promise.all(blogs.map(async (blog) => {
+            if (blog.image) {
+                const imageData = Buffer.from(blog.image, 'base64');
+                const imageSrc = `data:image/jpg;base64,${imageData.toString('base64')}`;
+                return { ...blog._doc, imageSrc };
+            }
+            return blog;
+        }));
+
+        response.json(blogsWithImages);
+    } catch (error) {
+        console.error('Error fetching blogs with images:', error);
+        response.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
-router.post('/blogs', tokenExtractor, async(request,response,next) => {
+
+const multer= require('multer')
+const storage = multer.memoryStorage()  // Use memory storage for storing image data in Buffer
+const upload = multer({ storage: storage })
+
+router.post('/blogs', tokenExtractor, upload.single('image'), async(request,response,next) => {
     try {
         const postedBody = request.body;
         const user = request.user
+        console.log(user)
+        // Handle file upload
+        const image = request.file
+        console.log('jelly')
         const blog = new Blog({
             ...postedBody,
             user: user._id,
+            image: image ? image.buffer.toString('base64') : null,  // Store image data as base64
         });
 
         const savedBlog = await blog.save();
@@ -41,21 +67,31 @@ router.delete('/blogs/:id',tokenExtractor,async (request,response,next) => {
         next(error)
     }
 })
-router.put('/blogs/:id', async (request, response, next) => {
+router.put('/blogs/like/:id', tokenExtractor, async (request, response, next) => {
     try{
         const updated_id = request.params.id
-        const obj = await Blog.findOne({_id: updated_id})
-        console.log(obj)
-        if (!obj) {
+        const userId = request.user._id 
+        const blog = await Blog.findOne({_id: updated_id})
+        console.log(blog)
+        if (!blog) {
             return response.status(400).json({error: 'blog id not found'})
         }
-        const newBlog= await Blog.findByIdAndUpdate(updated_id,
-            {$set: {
-                likes:obj.likes+1}
-            },
-            {new: true})
-        return response.status(200).json(newBlog)
+        const userIndex = blog.likes.indexOf(userId)
+        if (userIndex === -1) {
+            // User has not liked the blog, add the user to the likes array
+            blog.likes.push(userId);
+        } else {
+            // User has already liked the blog, remove the user from the likes array
+            blog.likes.splice(userIndex, 1);
+        }
+
+        const updatedBlog = await blog.save();
+        // const newBlog= await Blog.findByIdAndUpdate(updated_id,
+        //     {$set: {
+        //         likes:obj.likes+1}
+        //     },
+        //     {new: true})
+        return response.status(200).json(updatedBlog)
     } catch (error) { next(error) }
 })
-
 module.exports = router
