@@ -2,7 +2,7 @@ const router = require('express').Router()
 const Blog = require('../models/blog_model')
 const {tokenExtractor} = require('../utils/middleware')
 
-router.get('/blogs', async (request, response) => {
+router.get('/blogs', async (request, response,next) => {
     try {
         const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
 
@@ -22,7 +22,16 @@ router.get('/blogs', async (request, response) => {
         response.status(500).json({ error: 'Internal Server Error' });
     }
 })
-
+router.get('/blogs/:id', async (request, response,next) => {
+    try {
+        const id = request.params.id
+        const blogs = await Blog.findById(id).populate('user', { username: 1, name: 1 });
+        response.json(blogs);
+    } catch (error) {
+        console.error('Error fetching blogs with images:', error);
+        response.status(500).json({ error: 'Internal Server Error' });
+    }
+})
 
 const multer= require('multer')
 const path = require('path')
@@ -104,6 +113,22 @@ router.put('/blogs/like/:id', tokenExtractor, async (request, response, next) =>
         //         likes:obj.likes+1}
         //     },
         //     {new: true})
+        return response.status(200).json(updatedBlog)
+    } catch (error) { next(error) }
+})
+router.put('/blogs/:id', tokenExtractor, async (request, response, next) => {
+    try{
+        const blog = await Blog.findById(request.params.id)
+        const body = request.body
+        const toUpdate = request.user._id.toString() === blog.user._id.toString()
+        ? request.params.id : undefined
+        const updatedBlog= await Blog.findByIdAndUpdate(toUpdate,
+            {$set: {
+                title:body.title,
+                content:body.content,
+            }
+            },
+            {new: true})
         return response.status(200).json(updatedBlog)
     } catch (error) { next(error) }
 })

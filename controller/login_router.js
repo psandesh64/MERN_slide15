@@ -29,7 +29,8 @@ router.post('/login', async (request,response,next) => {
     .send({
         token,
         username: user.username,
-        name: user.name
+        name: user.name,
+        id: user._id
     })
 } catch (error) {
     next(error)
