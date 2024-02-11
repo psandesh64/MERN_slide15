@@ -30,7 +30,8 @@ router.post('/login', async (request,response,next) => {
         token,
         username: user.username,
         name: user.name,
-        id: user._id
+        id: user._id,
+        follows: user.follows
     })
 } catch (error) {
     next(error)

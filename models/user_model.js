@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema({
     blogs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Blog'
+    }],
+    follower:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'User'
+    }],
+    follows:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'User'
     }]
 })
 userSchema.plugin(uniqueValidator)

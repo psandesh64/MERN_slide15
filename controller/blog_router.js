@@ -2,21 +2,23 @@ const router = require('express').Router()
 const Blog = require('../models/blog_model')
 const {tokenExtractor} = require('../utils/middleware')
 
-router.get('/blogs', async (request, response,next) => {
+router.get('/blogs', tokenExtractor, async (request, response,next) => {
     try {
         const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
-
+        const user = request.user
         // Fetch image data for each blog entry
-        const blogsWithImages = await Promise.all(blogs.map(async (blog) => {
-            if (blog.image) {
-                const imageData = Buffer.from(blog.image, 'base64');
-                const imageSrc = `data:image/jpg;base64,${imageData.toString('base64')}`;
-                return { ...blog._doc, imageSrc };
-            }
-            return blog;
-        }));
-
-        response.json(blogsWithImages);
+        // const blogsWithImages = await Promise.all(blogs.map(async (blog) => {
+        //     if (blog.image) {
+        //         const imageData = Buffer.from(blog.image, 'base64');
+        //         const imageSrc = `data:image/jpg;base64,${imageData.toString('base64')}`;
+        //         return { ...blog._doc, imageSrc };
+        //     }
+        //     return blog;
+        // }));
+        const filteredBlogs = blogs.map(blog =>
+            user.follows.includes(blog.user._id) ? blog : null
+        ).filter(blog => blog !== null)
+        response.json(filteredBlogs);
     } catch (error) {
         console.error('Error fetching blogs with images:', error);
         response.status(500).json({ error: 'Internal Server Error' });
